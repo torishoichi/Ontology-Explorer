@@ -6,6 +6,25 @@ Palantirなどのプラットフォームで起きている「データ統合 �
 
 このデモは、サプライチェーン全体をオントロジーとして管理し、AIが関係性を理解して分析・推奨アクションを提示するシステムです。Palantir Foundryスタイルの「Human-in-the-loop: Search -> Select -> Execute」のワークフローを実装しています。
 
+さらに本デモは、**同じ世界・同じ事故を「オントロジー」と「従来のDB(RDB+SQL)」の両方で扱える**ようにし、両者の設計思想の違いを体感できる構成にしています。
+
+## 3つのモード（タブ）
+
+サイドバーの Chaos 注入（サプライヤー停止 / 工場停止）は **3タブすべてに同時反映** されます。同じ状態を別々の「見方」で扱える点がこのデモの肝です。
+
+| タブ | 何を見るか |
+|---|---|
+| 🌐 **Ontology Mode** | データを「オブジェクト+リンクのグラフ」として扱う。全体グラフ + 選択製品の Context Trace（辿ったリンク経路）+ AIの複合判断 + Write-back アクション |
+| 📊 **Classic DB Mode** | 同じデータを正規化テーブルで保持。「停止中サプライヤーが脅かすVIP注文」を出すのに **4テーブルJOINのSQL** を書く様子と、AIに渡るのが「ID中心の平たい表」になる様子を体感 |
+| ⚖️ **Compare** | 同じ事故への対応を左右に並べ、必要クエリ数・文脈の有無・分析→実行の統合度・スキーマの役割を総括 |
+
+### オントロジーの構成要素（コード上の対応）
+
+- **Object Type** = Pydanticクラス `Supplier / Material / Factory / Product / Order`
+- **Property** = 各クラスの属性（`status`, `stock`, `priority` …）
+- **Link** = オブジェクト間の参照（`supplier_id`, `factory_id`, `material_required_id`, `product_id`）
+- **Action (Write-back)** = 分析結果を世界に書き戻す操作（代替発注 / VIP割当 / 緊急増産）
+
 ## セットアップ
 
 ### 1. 依存関係のインストール
@@ -76,8 +95,9 @@ streamlit run app.py
 ## 技術スタック
 
 - **Streamlit**: Webアプリケーションフレームワーク
-- **Pydantic**: データモデル定義とバリデーション
-- **Graphviz**: グラフ可視化
+- **Pydantic**: データモデル定義とバリデーション（= オントロジーの Object Type）
+- **Graphviz**: セマンティックグラフ可視化
+- **SQLite (標準ライブラリ) + pandas**: Classic DB Mode のテーブル/SQLシミュレーション
 
 ## ファイル構成
 
